@@ -3,11 +3,12 @@ using System.ServiceModel;
 using System.ServiceModel.Description;
 using System.ServiceModel.Web;
 using System.Threading.Tasks;
-using Goova.Plexo.Client.LocalProxy.Logging;
+using Goova.Plexo.Client.LocalProxy.Library.Logging;
 using RestSharp;
+
 // ReSharper disable InconsistentNaming
 
-namespace Goova.Plexo.Client.LocalProxy
+namespace Goova.Plexo.Client.LocalProxy.Library
 {
     internal class Callback : ICallback //This will be loaded/injected by reflection
     {
@@ -34,21 +35,30 @@ namespace Goova.Plexo.Client.LocalProxy
 
         public async Task<ClientResponse> Instrument(IntrumentCallback instrument)
         {
-            if (_wsdlclient != null)
+            try
             {
-                return await _wsdlclient.Instrument(instrument);
+
+                if (_wsdlclient != null)
+                {
+                    return await _wsdlclient.Instrument(instrument);
+                }
+                if (_restclient != null)
+                {
+                    RestRequest req = new RestRequest(Method.POST);
+                    req.AddJsonBody(instrument);
+                    req.RequestFormat = DataFormat.Json;
+                    IRestResponse<ClientResponse> resp = await _restclient.ExecuteTaskAsync<ClientResponse>(req);
+                    if (resp.Data == null)
+                        return new ClientResponse {ErrorMessage = "Error executing callback: " + (resp.ErrorMessage ?? "Unknown Error"), ResultCode = ResultCodes.ClientServerError};
+                    return resp.Data;
+                }
+                return new ClientResponse {ErrorMessage = "Error executing callback, callback is not configured properly", ResultCode = ResultCodes.SystemError};
             }
-            if (_restclient != null)
+            catch (Exception e)
             {
-                RestRequest req=new RestRequest(Method.POST);
-                req.AddJsonBody(instrument);
-                req.RequestFormat=DataFormat.Json;
-                IRestResponse<ClientResponse> resp = await _restclient.ExecuteTaskAsync<ClientResponse>(req);
-                if (resp.Data == null)
-                    return new ClientResponse {ErrorMessage = "Error executing callback: " + (resp.ErrorMessage ?? "Unknown Error"), ResultCode = ResultCodes.ClientServerError};
-                return resp.Data;
+                Logger.ErrorException("Error executing callback", e);
+                return new ClientResponse { ErrorMessage = "Internal Error executing callback", ResultCode = ResultCodes.SystemError };
             }
-            return new ClientResponse { ErrorMessage = "Error executing callback, callback is not configured properly", ResultCode = ResultCodes.SystemError };
         }
 
 

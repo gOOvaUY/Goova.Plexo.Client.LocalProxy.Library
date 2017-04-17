@@ -4,10 +4,10 @@ using System.ServiceModel;
 using System.ServiceModel.Channels;
 using System.Threading.Tasks;
 using System.Web;
-using Goova.Plexo.Client.LocalProxy.Logging;
+using Goova.Plexo.Client.LocalProxy.Library.Logging;
 using Goova.Plexo.Client.SDK;
 
-namespace Goova.Plexo.Client.LocalProxy
+namespace Goova.Plexo.Client.LocalProxy.Library
 {
     public class PaymentGateway : IPaymentGateway
     {
