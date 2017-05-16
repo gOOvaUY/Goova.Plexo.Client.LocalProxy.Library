@@ -3,12 +3,12 @@ using System.ServiceModel;
 using System.ServiceModel.Description;
 using System.ServiceModel.Web;
 using System.Threading.Tasks;
-using Goova.Plexo.Client.LocalProxy.Library.Logging;
+using Plexo.Client.LocalProxy.Library.Logging;
 using RestSharp;
 
 // ReSharper disable InconsistentNaming
 
-namespace Goova.Plexo.Client.LocalProxy.Library
+namespace Plexo.Client.LocalProxy.Library
 {
     internal class Callback : ICallback //This will be loaded/injected by reflection
     {

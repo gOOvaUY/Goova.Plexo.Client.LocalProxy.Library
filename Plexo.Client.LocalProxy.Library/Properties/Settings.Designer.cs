@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Goova.Plexo.Client.LocalProxy.Library.Properties {
+namespace Plexo.Client.LocalProxy.Library.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]

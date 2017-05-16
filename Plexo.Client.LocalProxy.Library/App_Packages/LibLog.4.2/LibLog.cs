@@ -40,23 +40,23 @@
 
 using System.Diagnostics.CodeAnalysis;
 
-[assembly: SuppressMessage("Microsoft.Design", "CA1020:AvoidNamespacesWithFewTypes", Scope = "namespace", Target = "Goova.Plexo.Client.LocalProxy.Library.Logging")]
-[assembly: SuppressMessage("Microsoft.Design", "CA1026:DefaultParametersShouldNotBeUsed", Scope = "member", Target = "Goova.Plexo.Client.LocalProxy.Library.Logging.Logger.#Invoke(Goova.Plexo.Client.LocalProxy.Library.Logging.LogLevel,System.Func`1<System.String>,System.Exception,System.Object[])")]
+[assembly: SuppressMessage("Microsoft.Design", "CA1020:AvoidNamespacesWithFewTypes", Scope = "namespace", Target = "Plexo.Client.LocalProxy.Library.Logging")]
+[assembly: SuppressMessage("Microsoft.Design", "CA1026:DefaultParametersShouldNotBeUsed", Scope = "member", Target = "Plexo.Client.LocalProxy.Library.Logging.Logger.#Invoke(Plexo.Client.LocalProxy.Library.Logging.LogLevel,System.Func`1<System.String>,System.Exception,System.Object[])")]
 
 // If you copied this file manually, you need to change all "YourRootNameSpace" so not to clash with other libraries
 // that use LibLog
 #if LIBLOG_PROVIDERS_ONLY
-namespace Goova.Plexo.Client.LocalProxy.Library.LibLog
+namespace Plexo.Client.LocalProxy.Library.LibLog
 #else
-namespace Goova.Plexo.Client.LocalProxy.Library.Logging
+namespace Plexo.Client.LocalProxy.Library.Logging
 #endif
 {
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
 #if LIBLOG_PROVIDERS_ONLY
-    using Goova.Plexo.Client.LocalProxy.Library.LibLog.LogProviders;
+    using Plexo.Client.LocalProxy.Library.LibLog.LogProviders;
 #else
-    using Goova.Plexo.Client.LocalProxy.Library.Logging.LogProviders;
+    using Plexo.Client.LocalProxy.Library.Logging.LogProviders;
 #endif
     using System;
 #if !LIBLOG_PROVIDERS_ONLY
@@ -714,9 +714,9 @@ namespace Goova.Plexo.Client.LocalProxy.Library.Logging
 }
 
 #if LIBLOG_PROVIDERS_ONLY
-namespace Goova.Plexo.Client.LocalProxy.Library.LibLog.LogProviders
+namespace Plexo.Client.LocalProxy.Library.LibLog.LogProviders
 #else
-namespace Goova.Plexo.Client.LocalProxy.Library.Logging.LogProviders
+namespace Plexo.Client.LocalProxy.Library.Logging.LogProviders
 #endif
 {
     using System;

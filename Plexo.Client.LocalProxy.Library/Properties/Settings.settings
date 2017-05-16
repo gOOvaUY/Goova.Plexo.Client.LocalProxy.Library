@@ -1,5 +1,5 @@
 ﻿<?xml version='1.0' encoding='utf-8'?>
-<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="Goova.Plexo.Client.LocalProxy.Library.Properties" GeneratedClassName="Settings">
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="Plexo.Client.LocalProxy.Library.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
     <Setting Name="CallbackUrl" Type="System.String" Scope="Application">
