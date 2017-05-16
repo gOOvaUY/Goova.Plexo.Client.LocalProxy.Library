@@ -1,0 +1,3 @@
+[submodule "Plexo.Client.SDK"]
+	path = Plexo.Client.SDK
+	url = https://github.com/gOOvaUY/Plexo.Client.SDK
