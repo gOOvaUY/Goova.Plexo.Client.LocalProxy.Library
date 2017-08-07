@@ -1,8 +1,6 @@
 ﻿using System;
-using System.ServiceModel;
-using System.ServiceModel.Description;
-using System.ServiceModel.Web;
 using System.Threading.Tasks;
+using Plexo.Client.LocalProxy.Library.JsonSerializer;
 using Plexo.Client.LocalProxy.Library.Logging;
 using RestSharp;
 
@@ -28,7 +26,8 @@ namespace Plexo.Client.LocalProxy.Library
             else //Post based callback
             {
                 _wsdlclient = null;
-                _restclient=new RestClient(Properties.Settings.Default.CallbackUrl);
+                _restclient=NewtonsoftJsonSerializer.CreateClient(Properties.Settings.Default.CallbackUrl);
+
             }
 
         }
@@ -45,8 +44,7 @@ namespace Plexo.Client.LocalProxy.Library
                 if (_restclient != null)
                 {
                     RestRequest req = new RestRequest(Method.POST);
-                    req.AddJsonBody(instrument);
-                    req.RequestFormat = DataFormat.Json;
+                    req.SetJsonContent(instrument);
                     IRestResponse<ClientResponse> resp = await _restclient.ExecuteTaskAsync<ClientResponse>(req);
                     if (resp.Data == null)
                         return new ClientResponse {ErrorMessage = "Error executing callback: " + (resp.ErrorMessage ?? "Unknown Error"), ResultCode = ResultCodes.ClientServerError};
@@ -61,51 +59,31 @@ namespace Plexo.Client.LocalProxy.Library
             }
         }
 
-
-    }
-
-    public class WSDLCallback : ClientBase<ICallback>, ICallback
-    {
-        private static readonly ILog Logger = LogProvider.GetCurrentClassLogger();
-        private WSDLCallback(ServiceEndpoint enp) : base(enp)
+        public async Task<ClientResponse> Payment(TransactionCallback transaction)
         {
-        }
-        public Task<ClientResponse> Instrument(IntrumentCallback instrument)
-        {
-            return Channel.Instrument(instrument);
-        }
-        public static WSDLCallback Create()
-        {
-
             try
             {
-                int timeout = Properties.Settings.Default.Timeout;
-                WebHttpBinding binding = new WebHttpBinding();
-                binding.OpenTimeout = TimeSpan.FromSeconds(timeout);
-                binding.CloseTimeout = TimeSpan.FromSeconds(timeout);
-                binding.SendTimeout = TimeSpan.FromSeconds(timeout);
-                binding.ReceiveTimeout = TimeSpan.FromSeconds(timeout);
-                if (Properties.Settings.Default.CallbackUrl.StartsWith("https"))
-                    binding.Security.Mode = WebHttpSecurityMode.Transport;
 
-                ServiceEndpoint svc = new ServiceEndpoint(ContractDescription.GetContract(typeof(ICallback)),
-                    binding, new EndpointAddress(Properties.Settings.Default.CallbackUrl));
-                WebHttpBehavior behavior = new WebHttpBehavior
+                if (_wsdlclient != null)
                 {
-                    DefaultBodyStyle = WebMessageBodyStyle.Bare,
-                    DefaultOutgoingRequestFormat = WebMessageFormat.Json,
-                    DefaultOutgoingResponseFormat = WebMessageFormat.Json,
-                    HelpEnabled = true
-                };
-                svc.Behaviors.Add(behavior);
-                return new WSDLCallback(svc);
+                    return await _wsdlclient.Payment(transaction);
+                }
+                if (_restclient != null)
+                {
+                    RestRequest req = new RestRequest(Method.POST);
+                    req.SetJsonContent(transaction);
+                    IRestResponse<ClientResponse> resp = await _restclient.ExecuteTaskAsync<ClientResponse>(req);
+                    if (resp.Data == null)
+                        return new ClientResponse { ErrorMessage = "Error executing callback: " + (resp.ErrorMessage ?? "Unknown Error"), ResultCode = ResultCodes.ClientServerError };
+                    return resp.Data;
+                }
+                return new ClientResponse { ErrorMessage = "Error executing callback, callback is not configured properly", ResultCode = ResultCodes.SystemError };
             }
             catch (Exception e)
             {
-                Logger.ErrorException("Unable to create WSDLCallbackClient", e);
-                throw;
+                Logger.ErrorException("Error executing callback", e);
+                return new ClientResponse { ErrorMessage = "Internal Error executing callback", ResultCode = ResultCodes.SystemError };
             }
-
         }
     }
 }

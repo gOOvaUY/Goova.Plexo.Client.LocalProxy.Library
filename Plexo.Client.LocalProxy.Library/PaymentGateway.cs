@@ -20,9 +20,54 @@ namespace Plexo.Client.LocalProxy.Library
             return await OnlyRunOnIntranet(() => _cl.Authorize(authorization));
         }
 
+        public async Task<ServerResponse> DeleteInstruments(DeleteInstrumentRequest info)
+        {
+            return await OnlyRunOnIntranet(() => _cl.DeleteInstruments(info));
+        }
+
         public async Task<ServerResponse<List<IssuerInfo>>> GetSupportedIssuers()
         {
             return await OnlyRunOnIntranet(() => _cl.GetSupportedIssuers());
+        }
+
+        public async Task<ServerResponse<List<Commerce>>> GetCommerces()
+        {
+            return await OnlyRunOnIntranet(() => _cl.GetCommerces());
+        }
+
+        public async Task<ServerResponse<Commerce>> AddCommerce(CommerceRequest commerce)
+        {
+            return await OnlyRunOnIntranet(() => _cl.AddCommerce(commerce));
+        }
+
+        public async Task<ServerResponse<Commerce>> ModifyCommerce(CommerceModifyRequest commerce)
+        {
+            return await OnlyRunOnIntranet(() => _cl.ModifyCommerce(commerce));
+        }
+
+        public async Task<ServerResponse> DeleteCommerce(CommerceIdRequest commerce)
+        {
+            return await OnlyRunOnIntranet(() => _cl.DeleteCommerce(commerce));
+        }
+
+        public async Task<ServerResponse> SetDefaultCommerce(CommerceIdRequest commerce)
+        {
+            return await OnlyRunOnIntranet(() => _cl.SetDefaultCommerce(commerce));
+        }
+
+        public async Task<ServerResponse<List<IssuerData>>> GetCommerceIssuers(CommerceIdRequest commerce)
+        {
+            return await OnlyRunOnIntranet(() => _cl.GetCommerceIssuers(commerce));
+        }
+
+        public async Task<ServerResponse<IssuerData>> AddIssuerCommerce(IssuerData commerce)
+        {
+            return await OnlyRunOnIntranet(() => _cl.AddIssuerCommerce(commerce));
+        }
+
+        public async Task<ServerResponse> DeleteIssuerCommerce(CommerceIssuerIdRequest commerce)
+        {
+            return await OnlyRunOnIntranet(() => _cl.DeleteIssuerCommerce(commerce));
         }
 
         public async Task<ServerResponse<Transaction>> Purchase(PaymentRequest payment)
@@ -30,9 +75,30 @@ namespace Plexo.Client.LocalProxy.Library
             return await OnlyRunOnIntranet(() => _cl.Purchase(payment));
         }
 
-        public async Task<ServerResponse<Transaction>> Cancel(CancelRequest payment)
+        public async Task<ServerResponse<Transaction>> Cancel(Reference payment)
         {
             return await OnlyRunOnIntranet(() => _cl.Cancel(payment));
+        }
+
+        public async Task<ServerResponse<Transaction>> StartReserve(ReserveRequest payment)
+        {
+            return await OnlyRunOnIntranet(() => _cl.StartReserve(payment));
+        }
+
+        public async Task<ServerResponse<Transaction>> EndReserve(Reserve reserve)
+        {
+            return await OnlyRunOnIntranet(() => _cl.EndReserve(reserve));
+
+        }
+
+        public async Task<ServerResponse<Transaction>> Status(Reference payment)
+        {
+            return await OnlyRunOnIntranet(() => _cl.Status(payment));
+        }
+
+        public async Task<ServerResponse<List<InstrumentWithMetadata>>> GetInstruments(AuthorizationInfo info)
+        {
+            return await OnlyRunOnIntranet(() => _cl.GetInstruments(info));
         }
 
         private async Task<ServerResponse<T>> OnlyRunOnIntranet<T>(Func<Task<ServerResponse<T>>> func)
@@ -65,7 +131,36 @@ namespace Plexo.Client.LocalProxy.Library
             }
 
         }
+        private async Task<ServerResponse> OnlyRunOnIntranet(Func<Task<ServerResponse>> func)
+        {
+            try
+            {
+                string ip = null;
+                MessageProperties prop = OperationContext.Current?.IncomingMessageProperties;
+                if (prop != null)
+                {
+                    if (prop.ContainsKey(RemoteEndpointMessageProperty.Name))
+                    {
+                        RemoteEndpointMessageProperty endpoint = prop[RemoteEndpointMessageProperty.Name] as RemoteEndpointMessageProperty;
+                        if (endpoint != null)
+                            ip = endpoint.Address;
+                    }
+                }
+                if (ip == null)
+                    ip = HttpContext.Current.Request.UserHostAddress;
+                if (ip == null)
+                    return new ServerResponse { ErrorMessage = "Unable to get incoming ip", ResultCode = ResultCodes.SystemError };
+                if (IsIntranet(ip))
+                    return await func();
+                return new ServerResponse { ErrorMessage = "Not allowed to request from Internet", ResultCode = ResultCodes.Forbidden };
+            }
+            catch (Exception e)
+            {
+                Logger.ErrorException("System Error", e);
+                return new ServerResponse { ErrorMessage = "System Error, see error log for more detailes", ResultCode = ResultCodes.SystemError };
+            }
 
+        }
         private bool IsIntranet(string ip)
         {
             if (ip.StartsWith("172."))
