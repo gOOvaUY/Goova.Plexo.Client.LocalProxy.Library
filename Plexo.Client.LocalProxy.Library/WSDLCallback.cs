@@ -3,7 +3,7 @@ using System.ServiceModel;
 using System.ServiceModel.Description;
 using System.ServiceModel.Web;
 using System.Threading.Tasks;
-using Plexo.Client.LocalProxy.Library.Logging;
+using Plexo.Client.SDK.Logging;
 
 namespace Plexo.Client.LocalProxy.Library
 {

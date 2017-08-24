@@ -4,8 +4,9 @@ using System.ServiceModel;
 using System.ServiceModel.Channels;
 using System.Threading.Tasks;
 using System.Web;
-using Plexo.Client.LocalProxy.Library.Logging;
 using Plexo.Client.SDK;
+using Plexo.Client.SDK.Logging;
+using Plexo.Exceptions;
 
 namespace Plexo.Client.LocalProxy.Library
 {
@@ -15,14 +16,14 @@ namespace Plexo.Client.LocalProxy.Library
 
         private readonly PaymentGatewayClient _cl = PaymentGatewayClientFactory.GetClient(Properties.Settings.Default.ClientName);
 
-        public async Task<ServerResponse<string>> Authorize(Authorization authorization)
+        public async Task<ServerResponse<Session>> Authorize(Authorization authorization)
         {
             return await OnlyRunOnIntranet(() => _cl.Authorize(authorization));
         }
 
-        public async Task<ServerResponse> DeleteInstruments(DeleteInstrumentRequest info)
+        public async Task<ServerResponse> DeleteInstrument(DeleteInstrumentRequest info)
         {
-            return await OnlyRunOnIntranet(() => _cl.DeleteInstruments(info));
+            return await OnlyRunOnIntranet(() => _cl.DeleteInstrument(info));
         }
 
         public async Task<ServerResponse<List<IssuerInfo>>> GetSupportedIssuers()
@@ -75,7 +76,7 @@ namespace Plexo.Client.LocalProxy.Library
             return await OnlyRunOnIntranet(() => _cl.Purchase(payment));
         }
 
-        public async Task<ServerResponse<Transaction>> Cancel(Reference payment)
+        public async Task<ServerResponse<Transaction>> Cancel(CancelRequest payment)
         {
             return await OnlyRunOnIntranet(() => _cl.Cancel(payment));
         }
@@ -96,7 +97,7 @@ namespace Plexo.Client.LocalProxy.Library
             return await OnlyRunOnIntranet(() => _cl.Status(payment));
         }
 
-        public async Task<ServerResponse<List<InstrumentWithMetadata>>> GetInstruments(AuthorizationInfo info)
+        public async Task<ServerResponse<List<PaymentInstrument>>> GetInstruments(AuthorizationInfo info)
         {
             return await OnlyRunOnIntranet(() => _cl.GetInstruments(info));
         }
@@ -119,15 +120,16 @@ namespace Plexo.Client.LocalProxy.Library
                 if (ip == null)
                     ip = HttpContext.Current.Request.UserHostAddress;
                 if (ip == null)
-                    return new ServerResponse<T> { ErrorMessage = "Unable to get incoming ip", ResultCode = ResultCodes.SystemError };
+                    throw new ResultCodeException(ResultCodes.SystemError,("en", "Unable to get incoming ip"), ("es", "No puedo obtener el ip de origen"));
                 if (IsIntranet(ip))
                     return await func();
-                return new ServerResponse<T> { ErrorMessage = "Not allowed to request from Internet", ResultCode = ResultCodes.Forbidden };
+                throw new ResultCodeException(ResultCodes.Forbidden, ("en", "Not allowed to request from Internet"), ("es", "No se puede llamar a este servicio desde internet"));
             }
             catch (Exception e)
             {
-                Logger.ErrorException("System Error",e);
-                return new ServerResponse<T> {ErrorMessage = "System Error, see error log for more detailes", ResultCode = ResultCodes.SystemError};
+                ServerResponse<T> s = new ServerResponse<T>();
+                s.PopulateFromException(e,Logger);
+                return s;
             }
 
         }
@@ -149,15 +151,16 @@ namespace Plexo.Client.LocalProxy.Library
                 if (ip == null)
                     ip = HttpContext.Current.Request.UserHostAddress;
                 if (ip == null)
-                    return new ServerResponse { ErrorMessage = "Unable to get incoming ip", ResultCode = ResultCodes.SystemError };
+                    throw new ResultCodeException(ResultCodes.SystemError, ("en", "Unable to get incoming ip"), ("es", "No puedo obtener el ip de origen"));
                 if (IsIntranet(ip))
                     return await func();
-                return new ServerResponse { ErrorMessage = "Not allowed to request from Internet", ResultCode = ResultCodes.Forbidden };
+                throw new ResultCodeException(ResultCodes.Forbidden, ("en", "Not allowed to request from Internet"), ("es", "No se puede llamar a este servicio desde internet"));
             }
             catch (Exception e)
             {
-                Logger.ErrorException("System Error", e);
-                return new ServerResponse { ErrorMessage = "System Error, see error log for more detailes", ResultCode = ResultCodes.SystemError };
+                ServerResponse s = new ServerResponse();
+                s.PopulateFromException(e, Logger);
+                return s;
             }
 
         }

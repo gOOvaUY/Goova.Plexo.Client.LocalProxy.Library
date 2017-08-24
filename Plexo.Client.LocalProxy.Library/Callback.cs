@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Plexo.Client.LocalProxy.Library.JsonSerializer;
-using Plexo.Client.LocalProxy.Library.Logging;
+using Plexo.Client.SDK;
+using Plexo.Client.SDK.Logging;
+using Plexo.Exceptions;
 using RestSharp;
 
 // ReSharper disable InconsistentNaming
@@ -47,15 +49,16 @@ namespace Plexo.Client.LocalProxy.Library
                     req.SetJsonContent(instrument);
                     IRestResponse<ClientResponse> resp = await _restclient.ExecuteTaskAsync<ClientResponse>(req);
                     if (resp.Data == null)
-                        return new ClientResponse {ErrorMessage = "Error executing callback: " + (resp.ErrorMessage ?? "Unknown Error"), ResultCode = ResultCodes.ClientServerError};
+                        throw new ResultCodeException(ResultCodes.ClientServerError, ("en", $"Error executing callback: {resp.StatusCode} {resp.ErrorMessage ?? ""}"), ("es", $"Error ejecutando callback: {resp.StatusCode} {resp.ErrorMessage ?? ""}"));
                     return resp.Data;
                 }
-                return new ClientResponse {ErrorMessage = "Error executing callback, callback is not configured properly", ResultCode = ResultCodes.SystemError};
-            }
+                throw new ResultCodeException(ResultCodes.SystemError, ("en", "Error executing callback, callback is not configured properly"), ("es", "Error ejecutando callback, el callback no esta configurado correctamente"));
+             }
             catch (Exception e)
             {
-                Logger.ErrorException("Error executing callback", e);
-                return new ClientResponse { ErrorMessage = "Internal Error executing callback", ResultCode = ResultCodes.SystemError };
+                ClientResponse r = new ClientResponse();
+                r.PopulateFromException(e,Logger);
+                return r;
             }
         }
 
@@ -74,15 +77,16 @@ namespace Plexo.Client.LocalProxy.Library
                     req.SetJsonContent(transaction);
                     IRestResponse<ClientResponse> resp = await _restclient.ExecuteTaskAsync<ClientResponse>(req);
                     if (resp.Data == null)
-                        return new ClientResponse { ErrorMessage = "Error executing callback: " + (resp.ErrorMessage ?? "Unknown Error"), ResultCode = ResultCodes.ClientServerError };
+                        throw new ResultCodeException(ResultCodes.ClientServerError, ("en", $"Error executing callback: {resp.StatusCode} {resp.ErrorMessage ?? ""}"), ("es", $"Error ejecutando callback: {resp.StatusCode} {resp.ErrorMessage ?? ""}"));
                     return resp.Data;
                 }
-                return new ClientResponse { ErrorMessage = "Error executing callback, callback is not configured properly", ResultCode = ResultCodes.SystemError };
+                throw new ResultCodeException(ResultCodes.SystemError, ("en", "Error executing callback, callback is not configured properly"), ("es", "Error ejecutando callback, el callback no esta configurado correctamente"));
             }
             catch (Exception e)
             {
-                Logger.ErrorException("Error executing callback", e);
-                return new ClientResponse { ErrorMessage = "Internal Error executing callback", ResultCode = ResultCodes.SystemError };
+                ClientResponse r = new ClientResponse();
+                r.PopulateFromException(e, Logger);
+                return r;
             }
         }
     }
