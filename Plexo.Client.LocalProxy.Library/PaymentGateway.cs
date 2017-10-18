@@ -26,6 +26,11 @@ namespace Plexo.Client.LocalProxy.Library
             return await OnlyRunOnIntranet(() => _cl.DeleteInstrument(info));
         }
 
+        public async Task<ServerResponse<PaymentInstrument>> CreateBankInstrument(CreateBankInstrumentRequest request)
+        {
+            return await OnlyRunOnIntranet(() => _cl.CreateBankInstrument(request));
+        }
+
         public async Task<ServerResponse<List<IssuerInfo>>> GetSupportedIssuers()
         {
             return await OnlyRunOnIntranet(() => _cl.GetSupportedIssuers());
@@ -69,6 +74,16 @@ namespace Plexo.Client.LocalProxy.Library
         public async Task<ServerResponse> DeleteIssuerCommerce(CommerceIssuerIdRequest commerce)
         {
             return await OnlyRunOnIntranet(() => _cl.DeleteIssuerCommerce(commerce));
+        }
+
+        public async Task<ServerResponse<TransactionCursor>> ObtainTransactions(TransactionQuery query)
+        {
+            return await OnlyRunOnIntranet(() => _cl.ObtainTransactions(query));
+        }
+
+        public async Task<ServerResponse<string>> ObtainCSVTransactions(TransactionQuery query)
+        {
+            return await OnlyRunOnIntranet(() => _cl.ObtainCSVTransactions(query));
         }
 
         public async Task<ServerResponse<Transaction>> Purchase(PaymentRequest payment)
