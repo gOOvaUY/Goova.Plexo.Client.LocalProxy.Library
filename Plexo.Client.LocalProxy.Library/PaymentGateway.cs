@@ -14,7 +14,7 @@ namespace Plexo.Client.LocalProxy.Library
     {
         private static readonly ILog Logger = LogProvider.GetCurrentClassLogger();
 
-        private readonly PaymentGatewayClient _cl = PaymentGatewayClientFactory.GetClient(Properties.Settings.Default.ClientName);
+        private readonly PaymentGatewayClient _cl = Properties.Settings.Default.IsIssuerClient ? PaymentGatewayClientFactory.GetIssuer(Properties.Settings.Default.ClientName) : PaymentGatewayClientFactory.GetClient(Properties.Settings.Default.ClientName) ;
 
         public async Task<ServerResponse<Session>> Authorize(Authorization authorization)
         {
@@ -86,6 +86,11 @@ namespace Plexo.Client.LocalProxy.Library
             return await OnlyRunOnIntranet(() => _cl.ObtainCSVTransactions(query));
         }
 
+        public async Task<ServerResponse<Transaction>> CodeAction(CodeRequest request)
+        {
+            return await OnlyRunOnIntranet(() => _cl.CodeAction(request));
+        }
+
         public async Task<ServerResponse<Transaction>> Purchase(PaymentRequest payment)
         {
             return await OnlyRunOnIntranet(() => _cl.Purchase(payment));
@@ -119,6 +124,8 @@ namespace Plexo.Client.LocalProxy.Library
 
         private async Task<ServerResponse<T>> OnlyRunOnIntranet<T>(Func<Task<ServerResponse<T>>> func)
         {
+            if (Properties.Settings.Default.EnableTesting)
+                return await func();
             try
             {
                 string ip = null;
@@ -150,6 +157,8 @@ namespace Plexo.Client.LocalProxy.Library
         }
         private async Task<ServerResponse> OnlyRunOnIntranet(Func<Task<ServerResponse>> func)
         {
+            if (Properties.Settings.Default.EnableTesting)
+                return await func();
             try
             {
                 string ip = null;
